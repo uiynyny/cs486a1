@@ -1,8 +1,10 @@
+from operator import attrgetter
+import queue as Q
+
+
 class Vertex:
     def __init__(self, node):
         self.id = node
-        self.parent = None
-        self.pattern = -1
         self.adj = {}
 
     def add_neighbor(self, neighbor, weight=0):
@@ -49,106 +51,112 @@ class Graph:
         return self.vert_dict.keys()
 
 
+class Data:
+    def __init__(self, seq, prob=1):
+        self.seq = seq
+        self.prob = prob
+
+    def size(self):
+        return len(self.seq)
+
+    def get_last(self):
+        return self.seq[-1]
+
+    def toString(self):
+        sentence = []
+        for word in self.seq:
+            sentence.append(word.id.split('/')[0])
+        return ' '.join(sentence)
+
+
 def BFS_method(v, pattern):
     queue = []
     result = []
-    queue.append(v)
+    data = Data([v])
+    queue.append(data)
     considered = 1
-    v.prob = 1.0
-    v.parent = None
-    v.pattern = 0
     while queue:
         current = queue.pop(0)
-        if current.pattern+1 == len(pattern):
+        if current.size() == len(pattern):
             result.append(current)
-            considered += 1
         else:
-            for key in current.adj:
-                if key.id.split('/')[1] == pattern[current.pattern+1]:
-                    temp_prob = current.prob * current.adj[key]
-                    if key.parent is None:
-                        key.parent = current
-                        key.prob = temp_prob
-                        key.pattern = current.pattern+1
-                        queue.append(key)
-                    elif temp_prob > key.prob:
-                        key.parent = current
-                        key.prob = temp_prob
-                        key.pattern = current.pattern+1
+            for key in current.get_last().adj:
+                if key.id.split('/')[1] == pattern[current.size()]:
+                    temp_prob = current.prob * current.get_last().adj[key]
+                    queue.append(Data(current.seq + [key], temp_prob))
                     considered += 1
-    # for i in queue:
-    #     temp = i
-    #     while temp is not None:
-    #         print(temp.id, end=' ')
-    #         temp = temp.parent
-    #     print(i.prob)
-    result.sort(key=lambda x: x.prob, reverse=True)
-    sentence = []
-    parent = result[0]
-    prob = parent.prob
-    while parent is not None:
-        sentence.append(parent.id.split('/')[0])
-        parent = parent.parent
-    sentence.reverse()
-    print("\""+' '.join(sentence)+"\" with probability "+str(prob))
-    print("Total nodes considered: "+str(considered))
+    maxItem = max(result, key=attrgetter('prob'))
+    print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
+    print('Total nodes considerred: ' + str(considered))
 
-def DFS_method(v,pattern):
+
+def DFS_method(v, pattern):
     queue = []
     result = []
-    queue.append(v)
+    data = Data([v])
+    queue.append(data)
     considered = 1
-    v.prob = 1.0
-    v.parent = None
-    v.pattern = 0
     while queue:
         current = queue.pop()
-        if current.pattern + 1 == len(pattern):
+        if current.size() == len(pattern):
             result.append(current)
-            considered += 1
         else:
-            for key in current.adj:
-                if key.id.split('/')[1] == pattern[current.pattern + 1]:
-                    temp_prob = current.prob * current.adj[key]
-                    if key.parent is None:
-                        key.parent = current
-                        key.prob = temp_prob
-                        key.pattern = current.pattern + 1
-                        queue.append(key)
-                    elif temp_prob > key.prob:
-                        key.parent = current
-                        key.prob = temp_prob
-                        key.pattern = current.pattern + 1
+            for key in current.get_last().adj:
+                if key.id.split('/')[1] == pattern[current.size()]:
+                    temp_prob = current.prob * current.get_last().adj[key]
+                    queue.append(Data(current.seq + [key], temp_prob))
                     considered += 1
-    # for i in queue:
-    #     temp = i
-    #     while temp is not None:
-    #         print(temp.id, end=' ')
-    #         temp = temp.parent
-    #     print(i.prob)
-    result.sort(key=lambda x: x.prob, reverse=True)
-    sentence = []
-    parent = result[0]
-    prob = parent.prob
-    while parent is not None:
-        sentence.append(parent.id.split('/')[0])
-        parent = parent.parent
-    sentence.reverse()
-    print("\"" + ' '.join(sentence) + "\" with probability " + str(prob))
-    print("Total nodes considered: " + str(considered))
+    maxItem = max(result, key=attrgetter('prob'))
+    print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
+    print('Total nodes considerred: ' + str(considered))
 
-def generate(start, pattern, graph):
+
+def Heuristic_search(v, pattern):
+    queue = []
+    result = []
+    data = Data([v])
+    queue.append(data)
+    considered = 1
+    while queue:
+
+        current = queue.pop(0)
+        if current.size() == len(pattern):
+            result.append(current)
+        else:
+            for key in current.get_last().adj:
+                if key.id.split('/')[1] == pattern[current.size()]:
+                    temp_prob = current.prob * current.get_last().adj[key]
+                    queue.append(Data(current.seq + [key], temp_prob))
+                    considered += 1
+    maxItem = max(result, key=attrgetter('prob'))
+    print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
+    print('Total nodes considerred: ' + str(considered))
+
+
+def generate(start, pattern, search, graph):
     g = Graph()
+    heuristic = {}
     for line in graph:
         lists = line.split("//")
         g.add_edge(lists[0], lists[1], float(lists[2]))
+        dict_key = (lists[0], lists[1].split('/')[1])
+        if dict_key in heuristic:
+            if heuristic[dict_key] < float(lists[2]):
+                heuristic[dict_key] = float(lists[2])
+        else:
+            heuristic[dict_key] = float(lists[2])
     curWord = start + "/" + pattern[0]
     v = g.get_vertex(curWord)
-    # BFS_method(v, pattern)
-    DFS_method(v,pattern)
+    if search is "B":
+        BFS_method(v, pattern)
+    elif search is "D":
+        DFS_method(v, pattern)
+    elif search is "H":
+        Heuristic_search(v, pattern)
+
 
 if __name__ == '__main__':
     file = open("input.txt")
-    startingWord = "hans"
-    sentenceSpec = ['NNP', 'VBD', 'DT', 'NN']
-    generate(startingWord, sentenceSpec, file)
+    startingWord = "a"
+    sentenceSpec = ["DT", "NN", "VBD", "NNP", "IN", "DT", "NN"]
+    generate(startingWord, sentenceSpec, "H", file)
