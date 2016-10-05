@@ -1,5 +1,4 @@
 from operator import attrgetter
-import queue as Q
 
 
 class Vertex:
@@ -87,7 +86,7 @@ def BFS_method(v, pattern):
                     considered += 1
     maxItem = max(result, key=attrgetter('prob'))
     print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
-    print('Total nodes considerred: ' + str(considered))
+    print('Total nodes considered: ' + str(considered))
 
 
 def DFS_method(v, pattern):
@@ -108,29 +107,36 @@ def DFS_method(v, pattern):
                     considered += 1
     maxItem = max(result, key=attrgetter('prob'))
     print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
-    print('Total nodes considerred: ' + str(considered))
+    print('Total nodes considered: ' + str(considered))
 
 
-def Heuristic_search(v, pattern):
+def Heuristic_search(v, pattern, heuristic):
     queue = []
     result = []
     data = Data([v])
     queue.append(data)
-    considered = 1
+    considered = 0
     while queue:
-
-        current = queue.pop(0)
+        candidate = [None, 0]
+        for item in queue:
+            if item.size() < len(pattern) and (item.get_last().id, pattern[item.size()]) in heuristic:
+                if item.prob * heuristic[(item.get_last().id, pattern[item.size()])] > candidate[1]:
+                    candidate = [item, item.prob * heuristic[(item.get_last().id, pattern[item.size()])]]
+        current = candidate[0]
+        print(candidate)
+        queue.remove(current)
+        considered += 1
         if current.size() == len(pattern):
-            result.append(current)
+            print("Done")
+            return
         else:
             for key in current.get_last().adj:
                 if key.id.split('/')[1] == pattern[current.size()]:
                     temp_prob = current.prob * current.get_last().adj[key]
                     queue.append(Data(current.seq + [key], temp_prob))
-                    considered += 1
     maxItem = max(result, key=attrgetter('prob'))
     print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
-    print('Total nodes considerred: ' + str(considered))
+    print('Total nodes considered: ' + str(considered))
 
 
 def generate(start, pattern, search, graph):
@@ -152,7 +158,7 @@ def generate(start, pattern, search, graph):
     elif search is "D":
         DFS_method(v, pattern)
     elif search is "H":
-        Heuristic_search(v, pattern)
+        Heuristic_search(v, pattern, heuristic)
 
 
 if __name__ == '__main__':
