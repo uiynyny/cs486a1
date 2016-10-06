@@ -71,8 +71,7 @@ class Data:
 def BFS_method(v, pattern):
     queue = []
     result = []
-    data = Data([v])
-    queue.append(data)
+    queue.append(Data([v]))
     considered = 1
     while queue:
         current = queue.pop(0)
@@ -92,8 +91,7 @@ def BFS_method(v, pattern):
 def DFS_method(v, pattern):
     queue = []
     result = []
-    data = Data([v])
-    queue.append(data)
+    queue.append(Data([v]))
     considered = 1
     while queue:
         current = queue.pop()
@@ -110,32 +108,34 @@ def DFS_method(v, pattern):
     print('Total nodes considered: ' + str(considered))
 
 
-def Heuristic_search(v, pattern, heuristic):
+def Heuristic_search(v, pattern, h):
     queue = []
     result = []
-    data = Data([v])
-    queue.append(data)
+    queue.append(Data([v]))
     considered = 0
     while queue:
-        candidate = [None, 0]
+        ptr = (0, None)
+        queue = [x for x in queue if
+                 x.size() == len(pattern) or (x.size() < len(pattern) and (x.get_last().id, pattern[x.size()]) in h)]
         for item in queue:
-            if item.size() < len(pattern) and (item.get_last().id, pattern[item.size()]) in heuristic:
-                if item.prob * heuristic[(item.get_last().id, pattern[item.size()])] > candidate[1]:
-                    candidate = [item, item.prob * heuristic[(item.get_last().id, pattern[item.size()])]]
-        current = candidate[0]
-        print(candidate)
+            if item.size() < len(pattern):
+                if (item.get_last().id, pattern[item.size()]) in h:
+                    if h[(item.get_last().id, pattern[item.size()])] * item.prob > ptr[0]:
+                        ptr = (h[(item.get_last().id, pattern[item.size()])] * item.prob, item)
+            elif item.size() == len(pattern):
+                if item.prob > ptr[0]:
+                    ptr = (item.prob, item)
+        current = ptr[1]
         queue.remove(current)
         considered += 1
         if current.size() == len(pattern):
-            print("Done")
-            return
+            result.append(current)
+            break
         else:
             for key in current.get_last().adj:
                 if key.id.split('/')[1] == pattern[current.size()]:
-                    temp_prob = current.prob * current.get_last().adj[key]
-                    queue.append(Data(current.seq + [key], temp_prob))
-    maxItem = max(result, key=attrgetter('prob'))
-    print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
+                    queue.append(Data(current.seq + [key], current.prob * current.get_last().adj[key]))
+    print("\"" + result[0].toString() + "\" with probability " + str(result[0].prob))
     print('Total nodes considered: ' + str(considered))
 
 
@@ -153,7 +153,7 @@ def generate(start, pattern, search, graph):
             heuristic[dict_key] = float(lists[2])
     curWord = start + "/" + pattern[0]
     v = g.get_vertex(curWord)
-    if search is "B":
+    if search is "BREADTH_FIRST":
         BFS_method(v, pattern)
     elif search is "D":
         DFS_method(v, pattern)
@@ -165,4 +165,4 @@ if __name__ == '__main__':
     file = open("input.txt")
     startingWord = "a"
     sentenceSpec = ["DT", "NN", "VBD", "NNP", "IN", "DT", "NN"]
-    generate(startingWord, sentenceSpec, "H", file)
+    generate(startingWord, sentenceSpec, "B", file)
