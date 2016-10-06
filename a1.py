@@ -72,9 +72,10 @@ def BFS_method(v, pattern):
     queue = []
     result = []
     queue.append(Data([v]))
-    considered = 1
+    considered = 0
     while queue:
         current = queue.pop(0)
+        considered += 1
         if current.size() == len(pattern):
             result.append(current)
         else:
@@ -82,7 +83,6 @@ def BFS_method(v, pattern):
                 if key.id.split('/')[1] == pattern[current.size()]:
                     temp_prob = current.prob * current.get_last().adj[key]
                     queue.append(Data(current.seq + [key], temp_prob))
-                    considered += 1
     maxItem = max(result, key=attrgetter('prob'))
     print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
     print('Total nodes considered: ' + str(considered))
@@ -92,9 +92,10 @@ def DFS_method(v, pattern):
     queue = []
     result = []
     queue.append(Data([v]))
-    considered = 1
+    considered = 0
     while queue:
         current = queue.pop()
+        considered += 1
         if current.size() == len(pattern):
             result.append(current)
         else:
@@ -102,7 +103,6 @@ def DFS_method(v, pattern):
                 if key.id.split('/')[1] == pattern[current.size()]:
                     temp_prob = current.prob * current.get_last().adj[key]
                     queue.append(Data(current.seq + [key], temp_prob))
-                    considered += 1
     maxItem = max(result, key=attrgetter('prob'))
     print("\"" + maxItem.toString() + "\" with probability " + str(maxItem.prob))
     print('Total nodes considered: ' + str(considered))
