@@ -155,9 +155,9 @@ def generate(start, pattern, search, graph):
     v = g.get_vertex(curWord)
     if search is "BREADTH_FIRST":
         BFS_method(v, pattern)
-    elif search is "D":
+    elif search is "DEPTH_FIRST":
         DFS_method(v, pattern)
-    elif search is "H":
+    elif search is "HEURISTIC":
         Heuristic_search(v, pattern, heuristic)
 
 
@@ -165,4 +165,4 @@ if __name__ == '__main__':
     file = open("input.txt")
     startingWord = "a"
     sentenceSpec = ["DT", "NN", "VBD", "NNP", "IN", "DT", "NN"]
-    generate(startingWord, sentenceSpec, "B", file)
+    generate(startingWord, sentenceSpec, "HEURISTIC", file)
